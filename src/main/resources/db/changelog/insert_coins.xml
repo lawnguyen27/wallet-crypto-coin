@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Tạo bảng Coins -->
+    <changeSet id="20250311-01-insert-coins" author="your_name">
+        <insert tableName="m_coins">
+            <column name="id" value="1"/>
+            <column name="symbol" value="SOL_TEST"/>
+            <column name="name" value="Solana Testnet"/>
+            <column name="logo_url" value="https://example.com/solana-logo.png"/>
+            <column name="is_enabled" valueNumeric="1"/>
+            <column name="created_by" value="SYSTEM"/>
+        </insert>
+
+        <insert tableName="m_coins">
+            <column name="id" value="2"/>
+            <column name="symbol" value="ETH_TEST6"/>
+            <column name="name" value="Ethereum Testnet 6"/>
+            <column name="logo_url" value="https://example.com/ethereum-logo.png"/>
+            <column name="is_enabled" valueNumeric="1"/>
+            <column name="created_by" value="SYSTEM"/>
+        </insert>
+    </changeSet>
+
+    <!-- Tạo bảng Networks -->
+    <changeSet id="20250311-02-insert-networks" author="your_name">
+        <insert tableName="m_networks">
+            <column name="id" value="1"/>
+            <column name="name" value="Solana Testnet"/>
+            <column name="network_type" value="SOLANA"/>
+            <column name="is_enabled" valueNumeric="1"/>
+            <column name="created_by" value="SYSTEM"/>
+        </insert>
+
+        <insert tableName="m_networks">
+            <column name="id" value="2"/>
+            <column name="name" value="Ethereum Testnet 6"/>
+            <column name="network_type" value="ETHEREUM"/>
+            <column name="is_enabled" valueNumeric="1"/>
+            <column name="created_by" value="SYSTEM"/>
+        </insert>
+    </changeSet>
+
+<!--    &lt;!&ndash; Tạo bảng trung gian Coin-Network &ndash;&gt;-->
+<!--    <changeSet id="20250311-03-create-coin-network" author="your_name">-->
+<!--        <createTable tableName="m_coin_networks">-->
+<!--            <column name="coin_id" type="BIGINT">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="network_id" type="BIGINT">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--        </createTable>-->
+
+<!--        <addPrimaryKey columnNames="coin_id, network_id" constraintName="pk_coin_networks" tableName="m_coin_networks"/>-->
+
+<!--        <addForeignKeyConstraint baseColumnNames="coin_id"-->
+<!--                                 baseTableName="m_coin_networks"-->
+<!--                                 constraintName="fk_coin_networks_coin"-->
+<!--                                 referencedColumnNames="id"-->
+<!--                                 referencedTableName="m_coins"-->
+<!--                                 onDelete="CASCADE"/>-->
+
+<!--        <addForeignKeyConstraint baseColumnNames="network_id"-->
+<!--                                 baseTableName="m_coin_networks"-->
+<!--                                 constraintName="fk_coin_networks_network"-->
+<!--                                 referencedColumnNames="id"-->
+<!--                                 referencedTableName="m_networks"-->
+<!--                                 onDelete="CASCADE"/>-->
+<!--    </changeSet>-->
+
+    <!-- Chèn dữ liệu vào bảng trung gian -->
+    <changeSet id="20250311-04-insert-coin-network" author="your_name">
+        <!-- Giả sử Solana Testnet hỗ trợ SOL_TEST -->
+        <insert tableName="m_coin_networks">
+            <column name="fk_coin_id" value="1"/>
+            <column name="fk_network_id" value="1"/>
+        </insert>
+
+        <!-- Giả sử Ethereum Testnet 6 hỗ trợ ETH_TEST6 -->
+        <insert tableName="m_coin_networks">
+            <column name="fk_coin_id" value="2"/>
+            <column name="fk_network_id" value="2"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
