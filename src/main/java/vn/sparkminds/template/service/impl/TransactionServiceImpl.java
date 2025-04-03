@@ -137,7 +137,8 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setTimestamp(Instant.now());
         transaction.setSystemProcessDate(Instant.now());
         transaction.setNetwork(network);
-        transaction.setWallet(walletDestination);
+        transaction.setNetAmount(request.getData().getNetAmount());
+        transaction.setNetworkFee(request.getData().getNetworkFee());
 
         if (request.getData().getExternalTxId() == null) {
             transaction.setExternalId(UUID.randomUUID().toString());
@@ -148,42 +149,90 @@ public class TransactionServiceImpl implements TransactionService {
         transactionRepository.save(transaction);
 
         // Update balance if transaction is completed or failed
-        if ("COMPLETED".equalsIgnoreCase(request.getData().getStatus())
-                || "FAILED".equalsIgnoreCase(request.getData().getStatus())) {
+        if (TransactionStatus.FAILED.equals(transaction.getStatus())) {
 
-            log.info("Transaction complete, update balance");
+            log.info("Transaction failed");
+            if (walletSource.isPresent()
+                    && transaction.getType().equals(TransactionType.WITHDRAW)
+                    && walletSource.get().getUser().getEmail().equalsIgnoreCase(ADMIN_EMAIL)
+                    && transaction.getWallet() != null) {
+
+                //refund balance
+                if (!transaction.isRefund()) {
+                    log.info("Transaction fail. Update balance");
+                    Wallet updateWallet = transaction.getWallet();
+                    updateWallet.setBalance(updateWallet.getBalance().add(transaction.getAmount()));
+                    walletRepository.save(walletSource.get());
+                    transaction.setRefund(true);
+                }
+            }
+            //check if transfer to hot wallet failed
+            else if(transaction.getType().equals(TransactionType.WITHDRAW)
+                    && walletDestination != null
+                    && walletDestination.getUser().getEmail().equalsIgnoreCase(ADMIN_EMAIL)
+                    && !request.getData().getSubStatus().equalsIgnoreCase("INSUFFICIENT_FUNDS_FOR_FEE")
+            ){
+                //resend transaction
+                CreateTransactionWithdrawRequestDto requestHotWallet = new CreateTransactionWithdrawRequestDto();
+                requestHotWallet.setAssetId(transaction.getCoin().getSymbol());
+                requestHotWallet.setAmount(transaction.getAmount());
+                requestHotWallet.setAddress(walletDestination.getAddress());
+                createTransactionWithdraw(requestHotWallet, walletSource.get().getUser().getEmail(), walletDestination);
+
+            }
+            transaction.setSystemConfirmDate(Instant.now());
+            transactionRepository.save(transaction);
+        }
+
+        if ("COMPLETED".equalsIgnoreCase(request.getData().getStatus())) {
+
+            log.info("Transaction complete");
+
+            //update transaction
             transaction.setSystemConfirmDate(Instant.now());
             transactionRepository.save(transaction);
 
-            if (walletDestination != null) {
-                BigDecimal balanceDestination = fireblocksService
-                        .getAssetBalance(walletDestination
-                                        .getUser()
-                                        .getVaultId(),
-                                request.getData().getAssetId());
+            //check transfer to hot wallet complete then update balance
+            if (transaction.getType().equals(TransactionType.WITHDRAW)
+                    && walletDestination != null
+                    && walletDestination.getUser().getEmail().equalsIgnoreCase(ADMIN_EMAIL)) {
 
-                walletDestination.setBalance(balanceDestination);
-                walletRepository.save(walletDestination);
-            }
+                //update pending balance
+                BigDecimal pendingBalance = fireblocksService.getAssetBalance(walletSource.get().getUser().getVaultId(), coin.getSymbol());
+                walletSource.get().setPendingBalance(pendingBalance);
 
-            if (walletSource.isPresent()) {
-                BigDecimal balanceSource = fireblocksService
-                        .getAssetBalance(walletSource.get()
-                                        .getUser().getVaultId(),
-                                request.getData().getAssetId());
-
-                walletSource.get().setBalance(balanceSource);
+                //update balance
+                walletSource.get().setBalance(walletSource.get().getBalance().add(transaction.getNetAmount()));
                 walletRepository.save(walletSource.get());
             }
 
+            //transfer to hot wallet when deposit
+            if (transaction.getType().equals(TransactionType.DEPOSIT)) {
+
+                log.info("Send to hot wallet");
+                //update pending balance
+                BigDecimal pendingBalance = fireblocksService.getAssetBalance(walletDestination.getUser().getVaultId(), coin.getSymbol());
+                walletDestination.setPendingBalance(pendingBalance);
+
+                //create transaction withdraw to hot wallet
+                CreateTransactionWithdrawRequestDto requestHotWallet = new CreateTransactionWithdrawRequestDto();
+                User admin = userRepository.findByEmail(ADMIN_EMAIL);
+                Optional<Wallet> walletAdmin = walletRepository.findByUserAndCoin(admin, coin);
+
+
+                requestHotWallet.setAssetId(transaction.getCoin().getSymbol());
+                requestHotWallet.setAmount(walletDestination.getPendingBalance());
+                requestHotWallet.setAddress(walletAdmin.get().getAddress());
+                createTransactionWithdraw(requestHotWallet, walletDestination.getUser().getEmail(), walletDestination);
+            }
         }
         log.info("Transaction processed successfully with status {}", transaction.getStatus());
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     @Override
-    public void createTransactionWithdraw(CreateTransactionWithdrawRequestDto request, String email) {
-        log.info("Creating transaction for from={}, coin={}, amount={}, to={}, address={}", email, request.getAssetId(), request.getAmount(), request.getDestinationVaultId(), request.getAddress());
+    public void createTransactionWithdraw(CreateTransactionWithdrawRequestDto request, String email, Wallet walletSrc) {
+        log.info("Creating transaction for from={}, coin={}, amount={}, to={}, address={}, wallet{}", email, request.getAssetId(), request.getAmount(), request.getDestinationVaultId(), request.getAddress(), walletSrc);
 
         // Get user
         User fromUser = userRepository.findByEmailAndIsEnabledIsTrue(email)
@@ -194,7 +243,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .orElseThrow(NotFoundException::new);
 
         // Get user destination
-        var toUser = userRepository.findUserByVaultId(request.getDestinationVaultId());
+        var toUser = walletRepository.findByAddress(request.getAddress());
 
         //lock wallet
         Wallet wallet = walletRepository.findByUserAndCoin(fromUser, coin)
@@ -206,34 +255,55 @@ public class TransactionServiceImpl implements TransactionService {
             throw new BadRequestException(ERROR_TRANSACTION_WITHDRAW_EXISTED);
         }
 
-        // Check balance
-        if (wallet.getBalance().compareTo(request.getAmount()) < 0) {
-            throw new BadRequestException(ERROR_WALLET_BALANCE_INSUFFICIENT);
+        // Check if transaction is hot wallet transfer
+        if (fromUser.getEmail().equalsIgnoreCase(ADMIN_EMAIL) || (toUser.isPresent() && toUser.get().getUser().getEmail().equalsIgnoreCase(ADMIN_EMAIL))) {
+            BigDecimal balance = fireblocksService.getAssetBalance(fromUser.getVaultId(), coin.getSymbol());
+            if (balance.compareTo(request.getAmount()) < 0) {
+                throw new BadRequestException(ERROR_WALLET_BALANCE_INSUFFICIENT);
+            }
+            // Create transaction
+            Transaction transaction = new Transaction();
+            transaction.setCoin(coin);
+            transaction.setAmount(request.getAmount());
+            transaction.setStatus(TransactionStatus.QUEUED);
+            transaction.setType(TransactionType.WITHDRAW);
+
+            // Get destination wallet
+            Wallet walletDestination = null;
+            if (toUser.isPresent()) {
+                walletDestination = walletRepository.findByUserAndCoin(toUser.get().getUser(), coin).orElse(null);
+            }
+            log.info("Wallet info: {}", walletSrc);
+            transaction.setWallet(walletSrc);
+            transaction.setFromAddress(wallet.getAddress());
+            transaction.setToAddress(request.getAddress());
+            transaction.setExternalId(UUID.randomUUID().toString());
+            transaction.setTimestamp(Instant.now());
+            transaction.setSystemProcessDate(Instant.now());
+            transaction.setNetwork(wallet.getNetwork());
+            transactionRepository.save(transaction);
+
+            log.info("Transaction queued successfully with externalId: {}", transaction.getExternalId());
+        } else {
+            // send request withdraw from hot wallet
+            //check balance
+            BigDecimal balance = wallet.getBalance();
+            if (balance.compareTo(request.getAmount()) < 0) {
+                log.info("Balance insufficient{}", fromUser.getEmail());
+                throw new BadRequestException(ERROR_WALLET_BALANCE_INSUFFICIENT);
+            }
+            //update balance
+            wallet.setBalance(wallet.getBalance().subtract(request.getAmount()));
+            walletRepository.save(wallet);
+
+            //send transaction by hot wallet
+            CreateTransactionWithdrawRequestDto requestWithdraw = new CreateTransactionWithdrawRequestDto();
+            requestWithdraw.setAssetId(request.getAssetId());
+            requestWithdraw.setAmount(request.getAmount());
+            requestWithdraw.setAddress(request.getAddress());
+            requestWithdraw.setDestinationVaultId(request.getDestinationVaultId());
+            createTransactionWithdraw(requestWithdraw, ADMIN_EMAIL, wallet);
         }
-
-        // Create transaction
-        Transaction transaction = new Transaction();
-        transaction.setCoin(coin);
-        transaction.setAmount(request.getAmount());
-        transaction.setStatus(TransactionStatus.QUEUED);
-        transaction.setType(TransactionType.WITHDRAW);
-
-        // Get destination wallet
-        Wallet walletDestination = null;
-        if (toUser.isPresent()) {
-            walletDestination = walletRepository.findByUserAndCoin(toUser.get(), coin).orElse(null);
-        }
-
-        transaction.setWallet(walletDestination);
-        transaction.setFromAddress(wallet.getAddress());
-        transaction.setToAddress(request.getAddress());
-        transaction.setExternalId(UUID.randomUUID().toString());
-        transaction.setTimestamp(Instant.now());
-        transaction.setSystemProcessDate(Instant.now());
-        transaction.setNetwork(wallet.getNetwork());
-        transactionRepository.save(transaction);
-
-        log.info("Transaction queued successfully with externalId: {}", transaction.getExternalId());
     }
 
     @Transactional

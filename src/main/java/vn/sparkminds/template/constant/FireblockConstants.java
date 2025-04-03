@@ -1,5 +1,7 @@
 package vn.sparkminds.template.constant;
 
+import java.math.BigDecimal;
+
 public final class FireblockConstants {
 
     private FireblockConstants() {}

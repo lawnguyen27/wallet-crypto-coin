@@ -31,7 +31,7 @@ public class Transaction extends AbstractAuditingEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, precision = 20, scale = 8)
+    @Column(nullable = false, precision = 38, scale = 18)
     private BigDecimal amount = BigDecimal.ZERO;
 
     @Column(name = "from_address")
@@ -75,6 +75,15 @@ public class Transaction extends AbstractAuditingEntity {
 
     @Column(name = "external_id",unique = true)
     private String externalId;
+
+    @Column(name = "network_fee", precision = 38, scale = 18)
+    private BigDecimal networkFee = BigDecimal.ZERO;
+
+    @Column(name = "net_amount", precision = 38, scale = 18)
+    private BigDecimal netAmount = BigDecimal.ZERO;
+
+    @Column(name = "is_refund")
+    private boolean isRefund = false;
 
     @JsonIgnore
     public boolean isPending() {

@@ -15,6 +15,7 @@ public class WalletDto {
     private Long id;
     private String address;
     private BigDecimal balance;
+    private BigDecimal pendingBalance;
     private CoinDto coin;
     private UserDto user;
     private NetworkDto network;

@@ -6,12 +6,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import vn.sparkminds.template.entity.User;
+import vn.sparkminds.template.entity.Wallet;
 import vn.sparkminds.template.entity.enumeration.TransactionStatus;
 import vn.sparkminds.template.repository.TransactionRepository;
-import vn.sparkminds.template.repository.UserRepository;
 import vn.sparkminds.template.repository.WalletRepository;
 import vn.sparkminds.template.service.FireblocksService;
 import vn.sparkminds.template.service.TransactionService;
+
+import java.math.BigDecimal;
 
 @Slf4j
 @Component
@@ -38,22 +40,31 @@ public class TransactionJob {
     @Scheduled(cron = "*/5 * * * * ?")
     @Transactional
     public void sendWithdrawTransactions() {
-        log.info("Start processing send withdraw transactions");
 
         // get list transaction QUEUED
         transactionService.getPendingTransactions("withdraw").forEach(transaction -> {
             log.info("Processing transaction: {}", transaction.getId());
             try {
                 // send request to Fireblocks
-                User fromUser = walletRepository.findByAddress(transaction.getFromAddress()).get().getUser();
-                User toUser = (transaction.getWallet() != null) ? transaction.getWallet().getUser() : null;
+                User fromUser = walletRepository.findByAddress(transaction.getFromAddress())
+                        .map(Wallet::getUser)
+                        .orElse(null);
+                User toUser = walletRepository.findByAddress(transaction.getToAddress())
+                        .map(Wallet::getUser)
+                        .orElse(null);
                 fireblocksService.createTransaction(
-                                fromUser,
-                                transaction.getCoin(),
-                                transaction.getAmount(),
-                                toUser,
-                                transaction.getToAddress(),
-                                transaction.getExternalId());
+                        fromUser,
+                        transaction.getCoin(),
+                        transaction.getAmount(),
+                        toUser,
+                        transaction.getToAddress(),
+                        transaction.getExternalId());
+//                // check fee
+//                    BigDecimal feeAmount = new BigDecimal(fee);
+//                    if (feeAmount.compareTo(transaction.getAmount())>0){
+//                        log.error("Error processing transaction {}: {}", transaction.getId(), "Fee is greater than amount");
+//                        return;
+//                    }
 
                 transaction.setStatus(TransactionStatus.COMFIRMING);
                 transactionRepository.save(transaction);
@@ -61,8 +72,6 @@ public class TransactionJob {
                 log.error("Error processing transaction {}: {}", transaction.getId(), ex.getMessage());
             }
         });
-
-        log.info("Finish processing transactions");
     }
 }
 

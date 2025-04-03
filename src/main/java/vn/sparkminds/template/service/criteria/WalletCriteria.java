@@ -20,6 +20,7 @@ public class WalletCriteria implements Serializable, Criteria {
     private LongFilter networkId;
     private BigDecimalFilter balance;
     private StringFilter address;
+    private BigDecimalFilter pendingBalance;
 
     public WalletCriteria(WalletCriteria other) {
         this.id = other.id == null ? null : other.id.copy();
@@ -28,6 +29,7 @@ public class WalletCriteria implements Serializable, Criteria {
         this.balance = other.balance == null ? null : other.balance.copy();
         this.address = other.address == null ? null : other.address.copy();
         this.networkId = other.networkId == null ? null : other.networkId.copy();
+        this.pendingBalance = other.pendingBalance == null ? null : other.pendingBalance.copy();
     }
 
     @Override

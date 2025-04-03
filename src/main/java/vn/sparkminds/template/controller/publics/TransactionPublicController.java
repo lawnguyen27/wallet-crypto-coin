@@ -25,7 +25,7 @@ public class TransactionPublicController {
     public ResponseEntity<CreateTransactionRequestDto> createTransaction
             (@Valid @RequestBody CreateTransactionWithdrawRequestDto request, Authentication authentication) {
 
-        transactionService.createTransactionWithdraw(request, authentication.getName());
+        transactionService.createTransactionWithdraw(request, authentication.getName(), null);
         return ResponseEntity.ok().build();
     }
 
@@ -33,7 +33,7 @@ public class TransactionPublicController {
     public ResponseEntity<CreateTransactionRequestDto> createTransactionWithdraw
             (@Valid @RequestBody CreateTransactionWithdrawRequestDto request, Authentication authentication) {
 
-        transactionService.createTransactionWithdraw(request, authentication.getName());
+        transactionService.createTransactionWithdraw(request, authentication.getName(), null);
         return ResponseEntity.ok().build();
     }
 }

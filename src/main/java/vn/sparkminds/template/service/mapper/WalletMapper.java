@@ -21,9 +21,11 @@ public class WalletMapper {
                 .balance(entity.getBalance())
                 .user(userMapper.toDto(entity.getUser()))
                 .coin(coinMapper.toDto(entity.getCoin()))
+
                 .address(entity.getAddress())
                 .network(networkMapper.toDto(entity.getNetwork()))
                 .balancePrice(entity.getBalance().multiply(entity.getCoin().getPrice()))
+                .pendingBalance(entity.getPendingBalance())
                 .build();
     }
 

@@ -73,13 +73,8 @@ public class FireblocksServiceImpl implements FireblocksService {
             log.info("Create vault addrees for vaultId={} with coins={}", vaultId, coin);
             String idempotencyKey = UUID.randomUUID().toString();
             Fireblocks fireblocks = getFireblocksInstance();
-
-            String address = fireblocks
-                    .vaults()
-                    .activateAssetForVaultAccount(vaultId, coin, idempotencyKey)
-                    .get()
-                    .getData()
-                    .getAddress();
+            var response = fireblocks.vaults().activateAssetForVaultAccount(vaultId, coin, idempotencyKey);
+            String address = response.get().getData().getAddress();
 
             log.info("Created address {} for coin {}", address, coin);
 
@@ -122,6 +117,7 @@ public class FireblocksServiceImpl implements FireblocksService {
 
             Fireblocks fireblocks = getFireblocksInstance();
 
+
             var response = fireblocks
                     .vaults()
                     .getVaultAccountAsset(vaultId, assetId)
@@ -158,14 +154,14 @@ public class FireblocksServiceImpl implements FireblocksService {
             source.setId(fromUser.getVaultId());
 
             DestinationTransferPeerPath destination = new DestinationTransferPeerPath();
-            if (address != null) {
+            if (toUser != null) {
+                destination.setType(TransferPeerPathType.VAULT_ACCOUNT);
+                destination.setId(toUser.getVaultId());
+            } else if (address != null) {
                 destination.setType(TransferPeerPathType.ONE_TIME_ADDRESS);
                 OneTimeAddress oneTimeAddress = new OneTimeAddress();
                 oneTimeAddress.setAddress(address);
                 destination.setOneTimeAddress(oneTimeAddress);
-            } else if (toUser != null) {
-                destination.setType(TransferPeerPathType.VAULT_ACCOUNT);
-                destination.setId(toUser.getVaultId());
             } else {
                 throw new IllegalArgumentException("Either toUser or address must be provided");
             }
@@ -177,7 +173,12 @@ public class FireblocksServiceImpl implements FireblocksService {
             request.setDestination(destination);
             request.setExternalTxId(externalTxId);
             // 🔹 Gửi transaction qua Fireblocks
+            var estimateFee =fireblocks.transactions().estimateTransactionFee(request, idempotencyKey);
+           //check fee
+            BigDecimal fee = new BigDecimal(estimateFee.get().getData().getMedium().getNetworkFee());
+
             var response = fireblocks.transactions().createTransaction(request, null, idempotencyKey);
+            log.info("Estimate fee for coin {} is {}", coin.getSymbol(), fee);
 
         } catch (Exception e) {
             log.error("Fireblocks transaction failed: {}", e.getMessage(), e);
@@ -193,11 +194,11 @@ public class FireblocksServiceImpl implements FireblocksService {
             Fireblocks fireblocks = getFireblocksInstance();
 
             CompletableFuture<ApiResponse<TransactionResponse>> response = null;
-            if (isExternalId == false){
+            if (isExternalId == false) {
                 response = fireblocks
                         .transactions()
                         .getTransaction(transactionId);
-            }else {
+            } else {
                 response = fireblocks
                         .transactions()
                         .getTransactionByExternalId(transactionId);

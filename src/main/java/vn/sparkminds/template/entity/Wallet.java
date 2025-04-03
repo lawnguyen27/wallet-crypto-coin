@@ -20,8 +20,11 @@ public class Wallet extends AbstractAuditingEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, precision = 20, scale = 8)
+    @Column(nullable = false, precision = 38, scale = 18)
     private BigDecimal balance = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 38, scale = 18)
+    private BigDecimal pendingBalance = BigDecimal.ZERO;
 
     @Column(nullable = false)
     private String address;

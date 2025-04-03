@@ -29,5 +29,11 @@ public class TransactionDataDto {
     private TransactionDataDestinationDto destination;
 
     private String externalTxId;
+
+    private BigDecimal netAmount;
+
+    private BigDecimal networkFee;
+
+    private String subStatus;
 }
 

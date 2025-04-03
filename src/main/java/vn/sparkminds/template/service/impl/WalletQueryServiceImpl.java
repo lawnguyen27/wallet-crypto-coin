@@ -69,6 +69,10 @@ public class WalletQueryServiceImpl extends QueryService<Wallet> implements Wall
             specification = specification.and(buildRangeSpecification(criteria.getBalance(), Wallet_.balance));
         }
 
+        if (Objects.nonNull(criteria.getPendingBalance())) {
+            specification = specification.and(buildRangeSpecification(criteria.getBalance(), Wallet_.pendingBalance));
+        }
+
         if (Objects.nonNull(criteria.getAddress())) {
             specification = specification.and(buildSpecification(criteria.getAddress(), Wallet_.address));
         }

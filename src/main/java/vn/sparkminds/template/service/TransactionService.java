@@ -1,6 +1,7 @@
 package vn.sparkminds.template.service;
 
 import vn.sparkminds.template.entity.Transaction;
+import vn.sparkminds.template.entity.Wallet;
 import vn.sparkminds.template.service.dto.request.CreateTransactionRequestDto;
 import vn.sparkminds.template.service.dto.request.CreateTransactionWithdrawRequestDto;
 import vn.sparkminds.template.service.dto.request.TransactionDataDto;
@@ -18,5 +19,5 @@ public interface TransactionService {
 
     void updateTransaction(Long id);
 
-    void createTransactionWithdraw(CreateTransactionWithdrawRequestDto request, String email);
+    void createTransactionWithdraw(CreateTransactionWithdrawRequestDto request, String email, Wallet wallet);
 }
