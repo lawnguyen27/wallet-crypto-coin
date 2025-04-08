@@ -2,10 +2,8 @@ package vn.sparkminds.template.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 import vn.sparkminds.template.config.error.http.NotFoundException;
 import vn.sparkminds.template.entity.Coin;
 import vn.sparkminds.template.repository.CoinRepository;
