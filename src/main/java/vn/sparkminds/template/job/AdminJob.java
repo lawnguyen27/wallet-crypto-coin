@@ -13,8 +13,9 @@ import vn.sparkminds.template.repository.CoinRepository;
 import vn.sparkminds.template.repository.NetworkRepository;
 import vn.sparkminds.template.repository.UserRepository;
 import vn.sparkminds.template.repository.WalletRepository;
-import vn.sparkminds.template.service.FireblocksService;
+import vn.sparkminds.template.service.FireblocksTransactionService;
 import vn.sparkminds.template.service.UserService;
+import vn.sparkminds.template.service.VaultService;
 
 import java.util.List;
 
@@ -24,12 +25,12 @@ import static vn.sparkminds.template.constant.FireblockConstants.ADMIN_EMAIL;
 @AllArgsConstructor
 @Slf4j
 public class AdminJob {
-    private final FireblocksService fireblocksService;
     private final UserRepository userRepository;
     private final CoinRepository coinRepository;
     private final NetworkRepository networkRepository;
     private final UserService userService;
     private final WalletRepository walletRepository;
+    private final VaultService vaultService;
 
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
@@ -38,7 +39,7 @@ public class AdminJob {
         User user = userRepository.findByEmail(ADMIN_EMAIL);
 
         if(user.getVaultId() == null) {
-            String vaultId = fireblocksService.createVaultAccount("Hot Wallet");
+            String vaultId = vaultService.createVaultAccount("Hot Wallet");
             user.setVaultId(vaultId);
             userRepository.save(user);
         }

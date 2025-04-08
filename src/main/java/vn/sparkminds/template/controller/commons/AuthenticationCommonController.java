@@ -37,11 +37,6 @@ public class AuthenticationCommonController {
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String token) {
-
-        if (token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
-
         authenticationService.logout(token);
         return ResponseEntity.noContent().build();
     }

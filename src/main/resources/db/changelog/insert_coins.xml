@@ -45,34 +45,6 @@
         </insert>
     </changeSet>
 
-<!--    &lt;!&ndash; Tạo bảng trung gian Coin-Network &ndash;&gt;-->
-<!--    <changeSet id="20250311-03-create-coin-network" author="your_name">-->
-<!--        <createTable tableName="m_coin_networks">-->
-<!--            <column name="coin_id" type="BIGINT">-->
-<!--                <constraints nullable="false"/>-->
-<!--            </column>-->
-<!--            <column name="network_id" type="BIGINT">-->
-<!--                <constraints nullable="false"/>-->
-<!--            </column>-->
-<!--        </createTable>-->
-
-<!--        <addPrimaryKey columnNames="coin_id, network_id" constraintName="pk_coin_networks" tableName="m_coin_networks"/>-->
-
-<!--        <addForeignKeyConstraint baseColumnNames="coin_id"-->
-<!--                                 baseTableName="m_coin_networks"-->
-<!--                                 constraintName="fk_coin_networks_coin"-->
-<!--                                 referencedColumnNames="id"-->
-<!--                                 referencedTableName="m_coins"-->
-<!--                                 onDelete="CASCADE"/>-->
-
-<!--        <addForeignKeyConstraint baseColumnNames="network_id"-->
-<!--                                 baseTableName="m_coin_networks"-->
-<!--                                 constraintName="fk_coin_networks_network"-->
-<!--                                 referencedColumnNames="id"-->
-<!--                                 referencedTableName="m_networks"-->
-<!--                                 onDelete="CASCADE"/>-->
-<!--    </changeSet>-->
-
     <!-- Chèn dữ liệu vào bảng trung gian -->
     <changeSet id="20250311-04-insert-coin-network" author="your_name">
         <!-- Giả sử Solana Testnet hỗ trợ SOL_TEST -->
@@ -85,6 +57,24 @@
         <insert tableName="m_coin_networks">
             <column name="fk_coin_id" value="2"/>
             <column name="fk_network_id" value="2"/>
+        </insert>
+    </changeSet>
+    <!-- Chèn dữ liệu vào bảng Limit Tokens -->
+    <changeSet id="20250311-05-insert-limit-tokens" author="your_name">
+        <insert tableName="m_limit_tokens">
+            <column name="id" value="1"/>
+            <column name="limit_quantity" valueNumeric="0.00002100000021"/>
+            <column name="fk_coin_id" value="1"/>
+            <column name="created_by" value="SYSTEM"/>
+
+        </insert>
+
+        <insert tableName="m_limit_tokens">
+            <column name="id" value="2"/>
+            <column name="limit_quantity" valueNumeric="0.00002100000021"/>
+            <column name="fk_coin_id" value="2"/>
+            <column name="created_by" value="SYSTEM"/>
+
         </insert>
     </changeSet>
 

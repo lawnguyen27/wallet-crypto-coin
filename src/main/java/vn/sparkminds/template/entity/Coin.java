@@ -1,11 +1,7 @@
 package vn.sparkminds.template.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import vn.sparkminds.template.config.jpa.AbstractAuditingEntity;
 
 import java.math.BigDecimal;
@@ -18,6 +14,7 @@ import java.util.List;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Coin extends AbstractAuditingEntity {
 
     @Id

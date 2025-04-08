@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import vn.sparkminds.template.service.FireblocksService;
+import vn.sparkminds.template.service.FireblocksTransactionService;
 import vn.sparkminds.template.service.TransactionQueryService;
 import vn.sparkminds.template.service.criteria.TransactionCriteria;
 import vn.sparkminds.template.service.dto.TransactionDto;
@@ -24,7 +24,7 @@ import java.util.List;
 public class TransactionPrivateController {
 
     private final TransactionQueryService transactionQueryService;
-    private final FireblocksService fireblocksService;
+    private final FireblocksTransactionService fireblocksTransactionService;
 
     @GetMapping
     @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') || hasAuthority('viewTransactions')")
@@ -49,7 +49,7 @@ public class TransactionPrivateController {
     @GetMapping("/fireblock")
     @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<TransactionResponse> getTransactionByFireblock(@RequestParam String id) {
-        TransactionResponse response = fireblocksService.getTransactionById(id,false);
+        TransactionResponse response = fireblocksTransactionService.getTransactionById(id,false);
         return ResponseEntity.ok(response);
     }
 }

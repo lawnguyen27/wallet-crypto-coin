@@ -3,6 +3,7 @@ package vn.sparkminds.template.service.mapper;
 import org.springframework.stereotype.Service;
 import vn.sparkminds.template.entity.Coin;
 import vn.sparkminds.template.service.dto.CoinDto;
+import vn.sparkminds.template.service.dto.request.UpdateCoinRequestDto;
 
 @Service
 public class CoinMapper {

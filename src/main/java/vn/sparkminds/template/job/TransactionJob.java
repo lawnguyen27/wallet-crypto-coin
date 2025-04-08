@@ -10,10 +10,8 @@ import vn.sparkminds.template.entity.Wallet;
 import vn.sparkminds.template.entity.enumeration.TransactionStatus;
 import vn.sparkminds.template.repository.TransactionRepository;
 import vn.sparkminds.template.repository.WalletRepository;
-import vn.sparkminds.template.service.FireblocksService;
+import vn.sparkminds.template.service.FireblocksTransactionService;
 import vn.sparkminds.template.service.TransactionService;
-
-import java.math.BigDecimal;
 
 @Slf4j
 @Component
@@ -23,7 +21,7 @@ public class TransactionJob {
     private final TransactionService transactionService;
     private final TransactionRepository transactionRepository;
     private final WalletRepository walletRepository;
-    private final FireblocksService fireblocksService;
+    private final FireblocksTransactionService fireblocksTransactionService;
 
     @Scheduled(cron = "0 0/5 * * * ?")
     public void processTransactions() {
@@ -52,7 +50,7 @@ public class TransactionJob {
                 User toUser = walletRepository.findByAddress(transaction.getToAddress())
                         .map(Wallet::getUser)
                         .orElse(null);
-                fireblocksService.createTransaction(
+                fireblocksTransactionService.createTransaction(
                         fromUser,
                         transaction.getCoin(),
                         transaction.getAmount(),

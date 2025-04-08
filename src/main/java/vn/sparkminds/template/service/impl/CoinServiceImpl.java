@@ -35,6 +35,7 @@ public class CoinServiceImpl implements CoinService {
 
         final Coin coin = coinRepository.findByIdAndIsEnabledTrue(coinId).orElseThrow(NotFoundException::new);
         coin.setName(request.getName());
+        coin.setLogoUrl(request.getLogoUrl());
 
         coinRepository.save(coin);
         log.info("Coin updated successfully: {}", coin);

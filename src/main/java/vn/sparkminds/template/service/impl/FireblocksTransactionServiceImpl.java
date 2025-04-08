@@ -10,7 +10,8 @@ import org.springframework.stereotype.Service;
 import vn.sparkminds.template.config.fireblock.FireblocksConfig;
 import vn.sparkminds.template.entity.Coin;
 import vn.sparkminds.template.entity.User;
-import vn.sparkminds.template.service.FireblocksService;
+import vn.sparkminds.template.service.FireblocksTransactionService;
+import vn.sparkminds.template.service.VaultService;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -23,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FireblocksServiceImpl implements FireblocksService {
+public class FireblocksTransactionServiceImpl implements FireblocksTransactionService, VaultService {
 
     private final FireblocksConfig config;
     private Fireblocks fireblocks;

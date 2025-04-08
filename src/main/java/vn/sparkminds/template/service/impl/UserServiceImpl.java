@@ -15,9 +15,11 @@ import vn.sparkminds.template.repository.CoinRepository;
 import vn.sparkminds.template.repository.NetworkRepository;
 import vn.sparkminds.template.repository.UserRepository;
 import vn.sparkminds.template.repository.WalletRepository;
-import vn.sparkminds.template.service.FireblocksService;
+import vn.sparkminds.template.service.FireblocksTransactionService;
 import vn.sparkminds.template.service.UserService;
+import vn.sparkminds.template.service.VaultService;
 import vn.sparkminds.template.service.dto.request.RegisterRequestDto;
+import vn.sparkminds.template.service.mapper.UserMapper;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -29,23 +31,19 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
     private final CoinRepository coinRepository;
-    private final FireblocksService fireblocksService;
     private final PasswordEncoder passwordEncoder;
     private final NetworkRepository networkRepository;
+    private final VaultService vaultService;
+    private final UserMapper userMapper;
 
     @Transactional
     @Override
     public RegisterRequestDto registerUser(RegisterRequestDto request) {
 
-        User user = new User();
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(UserRole.ROLE_USER);
-        user.setIsEnabled(true);
+        User user = userMapper.fromRegisterDto(request);
         userRepository.save(user);
 
-        String vaultId = fireblocksService.createVaultAccount(user.getEmail());
+        String vaultId = vaultService.createVaultAccount(user.getEmail());
         user.setVaultId(vaultId);
         userRepository.save(user);
 
@@ -65,7 +63,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void createWalletAndNetwork(User user, String vaultId, String coinSymbol, Network network) {
 
-        String address = fireblocksService.createWalletAddresses(vaultId, coinSymbol);
+        String address = vaultService.createWalletAddresses(vaultId, coinSymbol);
         log.info("wallet address {}, network", address, network.getNetworkType());
 
         Wallet wallet = new Wallet();

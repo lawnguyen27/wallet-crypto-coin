@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.sparkminds.template.job.KafkaService;
-import vn.sparkminds.template.service.FireblocksService;
+import vn.sparkminds.template.service.FireblocksTransactionService;
 import vn.sparkminds.template.service.dto.request.TransactionWebhookRequest;
 
 @RestController
@@ -16,7 +16,7 @@ import vn.sparkminds.template.service.dto.request.TransactionWebhookRequest;
 @RequiredArgsConstructor
 @Slf4j
 public class TransactionCommonController {
-    private final FireblocksService fireblocksService;
+    private final FireblocksTransactionService fireblocksTransactionService;
     private final ObjectMapper objectMapper;
     private final KafkaService kafkaService;
 
@@ -29,7 +29,7 @@ public class TransactionCommonController {
         log.info("Received Fireblocks Webhook: {}", requestBody);
         log.info("Received Signature: {}", signature);
 
-        if (!fireblocksService.verifySignature(requestBody, signature)) {
+        if (!fireblocksTransactionService.verifySignature(requestBody, signature)) {
             log.warn("Invalid Fireblocks Signature!");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Signature");
         }

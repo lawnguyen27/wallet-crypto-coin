@@ -71,6 +71,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public Optional<Authentication> authenticate(String token) {
         try {
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
             if (Boolean.TRUE.equals(redisTemplate.hasKey("revoked_token:" + token))) {
                 log.warn("Token is revoked: {}", token);
                 return Optional.empty();
