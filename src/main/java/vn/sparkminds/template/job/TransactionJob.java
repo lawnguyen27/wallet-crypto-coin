@@ -57,12 +57,6 @@ public class TransactionJob {
                         toUser,
                         transaction.getToAddress(),
                         transaction.getExternalId());
-//                // check fee
-//                    BigDecimal feeAmount = new BigDecimal(fee);
-//                    if (feeAmount.compareTo(transaction.getAmount())>0){
-//                        log.error("Error processing transaction {}: {}", transaction.getId(), "Fee is greater than amount");
-//                        return;
-//                    }
 
                 transaction.setStatus(TransactionStatus.COMFIRMING);
                 transactionRepository.save(transaction);

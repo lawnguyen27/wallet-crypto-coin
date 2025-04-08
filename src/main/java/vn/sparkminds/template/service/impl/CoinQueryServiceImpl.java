@@ -41,14 +41,12 @@ public class CoinQueryServiceImpl extends QueryService<Coin> implements CoinQuer
 
     @Override
     public Page<CoinDto> getCoins(CoinCriteria criteria, Pageable pageable) {
-        coinService.updateTestCoinPrices();
         final Specification<Coin> specification = buildSpecification(criteria);
         return coinRepository.findAll(specification, pageable).map(coinMapper::toDto);
     }
 
     @Override
     public Page<CoinDto> getCoinsEnable(CoinCriteria criteria, Pageable pageable) {
-        coinService.updateTestCoinPrices();
         final Specification<Coin> specification = buildSpecification(criteria)
                 .and((root, query, cb) -> cb.equal(root.get("isEnabled"), true));
         return coinRepository.findAll(specification, pageable).map(coinMapper::toDto);
@@ -56,14 +54,12 @@ public class CoinQueryServiceImpl extends QueryService<Coin> implements CoinQuer
 
     @Override
     public List<CoinDto> getCoins(CoinCriteria criteria) {
-        coinService.updateTestCoinPrices();
         final Specification<Coin> specification = buildSpecification(criteria);
         return coinRepository.findAll(specification).stream().map(coinMapper::toDto).toList();
     }
 
     @Override
     public Optional<CoinDto> getCoin(Long id) {
-        coinService.updateTestCoinPrices();
         return coinRepository.findById(id).map(coinMapper::toDto);
     }
 

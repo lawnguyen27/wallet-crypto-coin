@@ -257,7 +257,7 @@ public class TransactionServiceImpl implements TransactionService {
                 throw new BadRequestException(ERROR_WALLET_BALANCE_INSUFFICIENT);
             }
 
-            Transaction transaction = buildWithdrawTransaction(walletSrc, coin, request);
+            Transaction transaction = buildWithdrawTransaction(walletSrc, coin, request, wallet);
             transactionRepository.save(transaction);
 
             log.info("Transaction queued successfully with externalId: {}", transaction.getExternalId());
@@ -277,14 +277,14 @@ public class TransactionServiceImpl implements TransactionService {
         }
     }
 
-    private Transaction buildWithdrawTransaction(Wallet walletSrc, Coin coin, CreateTransactionWithdrawRequestDto request) {
+    private Transaction buildWithdrawTransaction(Wallet walletSrc, Coin coin, CreateTransactionWithdrawRequestDto request, Wallet hotWallet) {
         Transaction transaction = new Transaction();
         transaction.setCoin(coin);
         transaction.setAmount(request.getAmount());
         transaction.setStatus(TransactionStatus.QUEUED);
         transaction.setType(TransactionType.WITHDRAW);
         transaction.setWallet(walletSrc);
-        transaction.setFromAddress(walletSrc.getAddress());
+        transaction.setFromAddress(hotWallet.getAddress());
         transaction.setToAddress(request.getAddress());
         transaction.setExternalId(UUID.randomUUID().toString());
         transaction.setTimestamp(Instant.now());

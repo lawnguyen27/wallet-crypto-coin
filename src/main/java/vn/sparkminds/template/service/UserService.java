@@ -9,6 +9,5 @@ import java.util.concurrent.ExecutionException;
 
 public interface UserService {
     RegisterRequestDto registerUser(RegisterRequestDto request);
-    void createWalletAndNetwork(User user, String vaultId, String coinSymbol, Network network);
     void blockUser(Long id);
 }

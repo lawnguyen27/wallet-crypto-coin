@@ -8,5 +8,4 @@ public interface CoinService {
 
     void deleteCoin(Long coinId);
 
-    void updateTestCoinPrices();
 }

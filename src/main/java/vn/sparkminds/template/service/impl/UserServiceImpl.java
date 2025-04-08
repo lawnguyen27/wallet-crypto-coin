@@ -2,39 +2,28 @@ package vn.sparkminds.template.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.sparkminds.template.config.error.http.NotFoundException;
-import vn.sparkminds.template.entity.Coin;
-import vn.sparkminds.template.entity.Network;
 import vn.sparkminds.template.entity.User;
-import vn.sparkminds.template.entity.Wallet;
-import vn.sparkminds.template.entity.enumeration.UserRole;
 import vn.sparkminds.template.repository.CoinRepository;
 import vn.sparkminds.template.repository.NetworkRepository;
 import vn.sparkminds.template.repository.UserRepository;
 import vn.sparkminds.template.repository.WalletRepository;
-import vn.sparkminds.template.service.FireblocksTransactionService;
 import vn.sparkminds.template.service.UserService;
 import vn.sparkminds.template.service.VaultService;
+import vn.sparkminds.template.service.WalletService;
 import vn.sparkminds.template.service.dto.request.RegisterRequestDto;
 import vn.sparkminds.template.service.mapper.UserMapper;
-
-import java.math.BigDecimal;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    private final WalletRepository walletRepository;
-    private final CoinRepository coinRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final NetworkRepository networkRepository;
     private final VaultService vaultService;
     private final UserMapper userMapper;
+    private final WalletService walletService;
 
     @Transactional
     @Override
@@ -47,32 +36,8 @@ public class UserServiceImpl implements UserService {
         user.setVaultId(vaultId);
         userRepository.save(user);
 
-        List<Coin> coins = coinRepository.findCoinsByIsEnabledIsTrue();
-        for (Coin coin : coins) {
-            Network network;
-            if (coin.getSymbol().equalsIgnoreCase("SOL_TEST")) {
-                network = networkRepository.findByNetworkType("SOLANA");
-            } else {
-                network = networkRepository.findByNetworkType("ETHEREUM");
-            }
-            createWalletAndNetwork(user, vaultId, coin.getSymbol(), network);
-        }
+        walletService.createWalletsForUser(user, vaultId);
         return request;
-    }
-
-    @Override
-    public void createWalletAndNetwork(User user, String vaultId, String coinSymbol, Network network) {
-
-        String address = vaultService.createWalletAddresses(vaultId, coinSymbol);
-        log.info("wallet address {}, network", address, network.getNetworkType());
-
-        Wallet wallet = new Wallet();
-        wallet.setUser(user);
-        wallet.setCoin(coinRepository.findCoinBySymbol(coinSymbol));
-        wallet.setBalance(BigDecimal.ZERO);
-        wallet.setAddress(address);
-        wallet.setNetwork(network);
-        walletRepository.save(wallet);
     }
 
     @Override

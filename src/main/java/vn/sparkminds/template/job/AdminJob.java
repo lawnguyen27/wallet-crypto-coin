@@ -16,6 +16,7 @@ import vn.sparkminds.template.repository.WalletRepository;
 import vn.sparkminds.template.service.FireblocksTransactionService;
 import vn.sparkminds.template.service.UserService;
 import vn.sparkminds.template.service.VaultService;
+import vn.sparkminds.template.service.WalletService;
 
 import java.util.List;
 
@@ -31,6 +32,7 @@ public class AdminJob {
     private final UserService userService;
     private final WalletRepository walletRepository;
     private final VaultService vaultService;
+    private final WalletService walletService;
 
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
@@ -55,7 +57,7 @@ public class AdminJob {
                 } else {
                     network = networkRepository.findByNetworkType("ETHEREUM");
                 }
-                userService.createWalletAndNetwork(user, vaultId, coin.getSymbol(), network);
+                walletService.createWalletsForUser(user, vaultId);
             }
         }
 
